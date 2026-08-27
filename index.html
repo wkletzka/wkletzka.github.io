@@ -167,6 +167,10 @@
   .docbar .doclinks a:hover{ color: var(--blue); text-decoration: underline; }
   .docbar .doclinks a.active{ color: var(--blue); font-weight:600; }
 
+  #contact {
+    padding-bottom: 120px; /* Adds internal space inside the bottom of the section */
+  }
+
   .titleblock{ padding-top: 46px; padding-bottom: 46px; }
   .tb-top{
     display:flex; justify-content: space-between; align-items: center;
@@ -400,10 +404,155 @@
 
   .reveal{ opacity:0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease; }
   .reveal.in{ opacity:1; transform:none; }
-  @media (prefers-reduced-motion: reduce){ *{ transition-duration: 0.001ms !important; scroll-behavior:auto !important; } }
+
+  /* ============================================================
+     BOOT / ENTRANCE SEQUENCE
+     ============================================================ */
+  #boot-overlay{
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction: column;
+    font-family: var(--mono);
+    color: var(--maize);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+  #boot-overlay.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  #boot-overlay .boot-mark{ width: 96px; height:96px; margin-bottom: 22px; }
+  #boot-overlay .boot-mark path{
+    fill:none; stroke: var(--maize); stroke-width:2.5; stroke-linejoin: round;
+    stroke-dasharray: 400; stroke-dashoffset: 400;
+    animation: draw-m 1.1s ease forwards;
+  }
+  @keyframes draw-m{ to{ stroke-dashoffset: 0; } }
+  #boot-overlay .boot-line{
+    font-size: 0.78rem; letter-spacing: 0.08em; opacity:0;
+    animation: boot-fade 0.4s ease forwards;
+    margin-bottom: 4px;
+  }
+  #boot-overlay .boot-line.l1{ animation-delay: 1.05s; }
+  #boot-overlay .boot-line.l2{ animation-delay: 1.35s; }
+  #boot-overlay .boot-line.l3{ animation-delay: 1.65s; color: #8FE3A8; }
+  @keyframes boot-fade{ to{ opacity: 1; } }
+  #boot-overlay .boot-bar{
+    width: 220px; height: 4px; background: rgba(243,210,114,0.2);
+    margin-top: 14px; overflow:hidden; opacity:0;
+    animation: boot-fade 0.3s ease forwards; animation-delay: 1.05s;
+  }
+  #boot-overlay .boot-bar::after{
+    content:""; display:block; height:100%; width:0%;
+    background: var(--maize);
+    animation: boot-fill 0.9s ease forwards; animation-delay: 1.1s;
+  }
+  @keyframes boot-fill{ to{ width:100%; } }
+  .sheet.pre-boot{ opacity: 0; }
+  .sheet{ transition: opacity 0.7s ease; }
+  @media (prefers-reduced-motion: reduce){ #boot-overlay{ display:none; } .sheet.pre-boot{ opacity:1; } }
+
+  /* ============================================================
+     DRAGGABLE PROFILE CHIP
+     ============================================================ */
+  .drag-photo{
+    cursor: grab; touch-action: none; transition: right 0.55s cubic-bezier(0.34,1.56,0.64,1), top 0.55s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+    user-select: none;
+  }
+  .drag-photo:active{ cursor: grabbing; }
+  .drag-photo.dragging{ transition: box-shadow 0.2s ease; box-shadow: 0 14px 30px rgba(58,80,107,0.35); }
+  .drag-hint{
+    position:absolute; font-family: var(--mono); font-size: 0.6rem; color: var(--ink-soft);
+    letter-spacing: 0.06em; text-align:center; opacity: 0.7; pointer-events:none;
+    animation: hint-bounce 2.2s ease-in-out infinite;
+  }
+  @keyframes hint-bounce{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-3px); } }
+
+  /* ============================================================
+     PIN SPARK + COPY TOAST
+     ============================================================ */
+  .pin.func{ position:relative; }
+  .spark{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background: var(--maize); pointer-events:none;
+    animation: spark-fly var(--sd, 0.5s) ease-out forwards;
+  }
+  @keyframes spark-fly{
+    to{ transform: translate(var(--sx), var(--sy)) scale(0); opacity:0; }
+  }
+
+  #toast{
+    position: fixed; left:50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--maize); font-family: var(--mono);
+    font-size: 0.72rem; letter-spacing: 0.06em; padding: 10px 18px;
+    border: 1.5px solid var(--maize); z-index: 500; opacity:0; pointer-events:none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  table.io tr{ cursor: pointer; transition: background 0.15s ease; }
+  table.io tbody tr:hover{ background: var(--maize-soft); }
+
+  /* ============================================================
+     STAMP INTERACTION
+     ============================================================ */
+  .stamp{ cursor:pointer; transition: transform 0.15s ease; }
+  .stamp:active{ transform: rotate(-3deg) scale(0.92); }
+  .stamp.thud{ animation: stamp-thud 0.3s ease; }
+  @keyframes stamp-thud{ 0%{ transform: rotate(-3deg) scale(1.4); opacity:0.4; } 100%{ transform: rotate(-3deg) scale(1); opacity:1; } }
+
+  /* ============================================================
+     SCROLL PROGRESS ON SIDEBAR TRACK
+     ============================================================ */
+  .scroll-sidebar .track-fill{
+    position:absolute; top:0; left:50%; transform: translateX(-50%);
+    width: 2px; height:0%; background: var(--maize); z-index: 1;
+    transition: height 0.1s linear;
+  }
+
+  /* ============================================================
+     PCB NIGHT MODE (easter egg)
+     ============================================================ */
+  body.night-mode{
+    --paper: rgba(14, 22, 18, 0.95);
+    --paper-2: #0A1410;
+    --line: #1E3A2C;
+    --line-strong: #2FA870;
+    --ink: #C8F5D8;
+    --ink-soft: #6FBF95;
+    --blue: #2FA870;
+    --blue-soft: #0F2318;
+    --maize: #7CFFB2;
+    --maize-soft: #123420;
+    --red: #FF8A7A;
+    transition: background 0.4s ease;
+  }
+  body.night-mode .sheet{ transition: background 0.4s ease, border-color 0.4s ease; }
+  #egg-banner{
+    position: fixed; top: -60px; left:0; right:0; z-index: 600;
+    background: var(--maize); color:#0A1410; font-family: var(--mono);
+    font-weight:600; font-size: 0.75rem; letter-spacing: 0.08em;
+    text-align:center; padding: 10px; transition: top 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #egg-banner.show{ top:0; }
+  @media (prefers-reduced-motion: reduce){ .drag-photo{ transition:none; } .stamp{ transition:none; } }
 </style>
 </head>
 <body>
+
+<!-- Boot / Entrance Sequence -->
+<div id="boot-overlay">
+  <svg class="boot-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 52 L12 24 L4 24 L4 12 L26 12 L32 28 L38 12 L60 12 L60 24 L52 24 L52 52 L38 52 L38 34 L32 46 L26 34 L26 52 Z"/>
+  </svg>
+  <div class="boot-line l1">INITIALIZING DATASHEET…</div>
+  <div class="boot-line l2">LOADING MODULES: ABOUT / PROJECTS / EXPERIENCE / CONTACT</div>
+  <div class="boot-line l3">STATUS: READY</div>
+  <div class="boot-bar"></div>
+</div>
+
+<!-- Easter Egg Banner -->
+<div id="egg-banner">⚡ PCB NIGHT MODE ENGAGED — KONAMI CODE ACCEPTED ⚡</div>
+
+<!-- Copy Toast -->
+<div id="toast"></div>
 
 <!-- Dynamic Background Canvas -->
 <canvas id="bg-canvas"></canvas>
@@ -411,6 +560,7 @@
 <!-- Interactive Scrolling Sidebar with Block M -->
 <div class="scroll-sidebar">
     <div class="track"></div>
+    <div class="track-fill" id="track-fill"></div>
     <div class="figurine" id="sidebar-robot">
         <!-- Upgraded Cooler SVG Block M Figurine -->
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -434,7 +584,7 @@
     <div class="dot" data-target="contact" title="Contact"></div>
 </div>
 
-<div class="sheet" id="top">
+<div class="sheet pre-boot" id="top">
   <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
 
   <div class="docbar">
@@ -454,26 +604,28 @@
     <div class="tb-top">
       <div>UPDATED AUG 2026 &nbsp;|&nbsp; ANN ARBOR, MI</div>
       <div class="stamp-wrap">
-        <div class="stamp">Open to Offers</div>
+        <div class="stamp" id="stamp">Open to Offers</div>
       </div>
     </div>
 
-    <div style="position: relative; margin-bottom: 24px; padding-right: 260px;">
+    <div style="position: relative; margin-bottom: 40px; padding-right: 260px;">
       <div>
         <div class="partno">Hi, I'm Will Kletzka<span class="blue">.</span></div>
         <p class="tb-sub">
           An aspiring computer engineer at the University of Michigan. Scroll down to review my academic focus, professional experience, and personal projects.
         </p>
       </div>
-      <img src="images/DSC02859.jpeg" alt="Will Kletzka" style="width: 250px; height: 250px; border-radius: 50%; object-fit: cover; border: 2.5px solid var(--ink); position: absolute; right: 0; top: 75%; transform: translateY(-50%);">
+      <img src="images/DSC02859.jpeg" alt="Will Kletzka" id="drag-photo" class="drag-photo" style="width: 250px; height: 250px; border-radius: 50%; object-fit: cover; border: 2.5px solid var(--ink); position: absolute; right: 0; top: 75%; transform: translateY(-50%);">
+      <div class="drag-hint" id="drag-hint" style="position: absolute; right: 80px; top: calc(75% + 140px); font-size: 1.25rem; font-weight: bold;">↳ drag me</div>
     </div>
+
 
     <div class="features">
       <div class="ft-head">FEATURES</div>
       <ul>
         <li>BSE Computer Engineering, Minor in Mathematics — University of Michigan (Ann Arbor) — Exp. May 2028</li>
         <li>Most previously worked at Toyota as a SWE intern focused on internal tooling and prompting platforms</li>
-        <li>Interested in embedded software, computer architecture, FPGAs, and quantitative finance</li>
+        <li>Interested in embedded software, full-stack development, FPGAs, and quantitative finance</li>
         <li>In my free time, I wrestle, make music, and travel</li>
       </ul>
     </div>
@@ -650,6 +802,9 @@
         </tbody>
       </table>
     </div>
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <p style="font-size: small; margin: 0;">For a fun easter egg, hit: ↑↑↓↓←→←→ba</p>
+    </div>
   </section>
 
   <footer>
@@ -711,9 +866,19 @@
       });
   });
 
+  const trackFill = document.getElementById('track-fill');
+  function updateProgress() {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      const pct = max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0;
+      if (trackFill) trackFill.style.height = pct + '%';
+  }
+
   window.addEventListener('scroll', updateSidebar);
+  window.addEventListener('scroll', updateProgress);
   window.addEventListener('load', () => {
       setTimeout(updateSidebar, 100);
+      setTimeout(updateProgress, 100);
   });
 
   // --- 3. Interactive Electronics Background Canvas ---
@@ -776,9 +941,197 @@
 
   window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
   window.addEventListener('resize', resizeCanvas);
-  
+
+  // Click ripple: spawn a little burst of nodes on click, anywhere on the page
+  let ripples = [];
+  window.addEventListener('click', (e) => {
+      if (e.target.closest('a, .stamp, .drag-photo, .scroll-sidebar, table.io, .pin.func')) return;
+      const count = 10;
+      for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count;
+          ripples.push({
+              x: e.clientX, y: e.clientY,
+              vx: Math.cos(angle) * (1 + Math.random()),
+              vy: Math.sin(angle) * (1 + Math.random()),
+              life: 1
+          });
+      }
+  });
+  function drawRipples() {
+      ripples.forEach(r => {
+          r.x += r.vx; r.y += r.vy; r.life -= 0.02;
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(243, 210, 114, ${Math.max(r.life,0)})`;
+          ctx.fill();
+      });
+      ripples = ripples.filter(r => r.life > 0);
+  }
+
   resizeCanvas();
   drawCanvas();
+  requestAnimationFrame(function rippleTick(){ drawRipples(); requestAnimationFrame(rippleTick); });
+
+  // --- 4. Boot / Entrance Sequence ---
+  const bootOverlay = document.getElementById('boot-overlay');
+  const sheetEl = document.getElementById('top');
+  window.addEventListener('load', () => {
+      setTimeout(() => {
+          bootOverlay.classList.add('hide');
+          sheetEl.classList.remove('pre-boot');
+      }, 2000);
+  });
+  // Safety net in case load already fired
+  if (document.readyState === 'complete') {
+      setTimeout(() => {
+          bootOverlay.classList.add('hide');
+          sheetEl.classList.remove('pre-boot');
+      }, 2000);
+  }
+
+  // --- 5. Draggable Profile Chip ---
+  const dragPhoto = document.getElementById('drag-photo');
+  const dragHint = document.getElementById('drag-hint');
+  (function initDrag(){
+      let dragging = false, startX, startY, origRight, origTop, moved = false;
+      function getOffsets(){
+          const cs = getComputedStyle(dragPhoto);
+          return { right: parseFloat(cs.right), top: parseFloat(cs.top) };
+      }
+      function onDown(e){
+          dragging = true; moved = false;
+          const p = e.touches ? e.touches[0] : e;
+          startX = p.clientX; startY = p.clientY;
+          const off = getOffsets();
+          origRight = off.right; origTop = off.top;
+          dragPhoto.classList.add('dragging');
+          dragPhoto.style.transition = 'box-shadow 0.2s ease';
+          if (dragHint) dragHint.style.opacity = '0';
+          e.preventDefault();
+      }
+      function onMove(e){
+          if (!dragging) return;
+          const p = e.touches ? e.touches[0] : e;
+          const dx = p.clientX - startX;
+          const dy = p.clientY - startY;
+          if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+          dragPhoto.style.right = (origRight - dx) + 'px';
+          dragPhoto.style.top = (origTop + dy) + 'px';
+      }
+      function onUp(){
+          if (!dragging) return;
+          dragging = false;
+          dragPhoto.classList.remove('dragging');
+          dragPhoto.style.transition = 'right 0.55s cubic-bezier(0.34,1.56,0.64,1), top 0.55s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease';
+          // snap back to original spot
+          dragPhoto.style.right = '0px';
+          dragPhoto.style.top = '75%';
+          if (moved) playBeep(520, 0.06);
+      }
+      dragPhoto.addEventListener('mousedown', onDown);
+      dragPhoto.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onUp);
+      window.addEventListener('touchend', onUp);
+  })();
+
+  // --- 6. Web Audio beep helper (used for pin clicks & drag release) ---
+  let audioCtx;
+  function playBeep(freq = 440, dur = 0.08) {
+      try {
+          audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          gain.gain.value = 0.05;
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start();
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.stop(audioCtx.currentTime + dur);
+      } catch (err) { /* audio not available, ignore */ }
+  }
+
+  // --- 7. Pin click sparks ---
+  document.querySelectorAll('.pin.func').forEach((pin, i) => {
+      pin.addEventListener('click', (e) => {
+          playBeep(380 + i * 60, 0.07);
+          const rect = pin.getBoundingClientRect();
+          const originX = e.clientX - rect.left;
+          const originY = e.clientY - rect.top;
+          for (let j = 0; j < 6; j++) {
+              const s = document.createElement('span');
+              s.className = 'spark';
+              const angle = Math.random() * Math.PI * 2;
+              const dist = 18 + Math.random() * 14;
+              s.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
+              s.style.setProperty('--sy', Math.sin(angle) * dist + 'px');
+              s.style.setProperty('--sd', (0.4 + Math.random() * 0.3) + 's');
+              s.style.left = originX + 'px';
+              s.style.top = originY + 'px';
+              pin.appendChild(s);
+              s.addEventListener('animationend', () => s.remove());
+          }
+      });
+  });
+
+  // --- 8. Click-to-copy contact IO rows ---
+  const toast = document.getElementById('toast');
+  let toastTimer;
+  function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+  document.querySelectorAll('table.io tbody tr').forEach(row => {
+      row.addEventListener('click', (e) => {
+          if (e.target.tagName === 'A') return; // let the link work normally
+          const link = row.querySelector('a');
+          const val = link ? (link.getAttribute('href').replace('mailto:', '')) : row.querySelector('.io-name')?.textContent;
+          const text = link ? link.textContent : val;
+          navigator.clipboard?.writeText(text).then(() => {
+              showToast('COPIED: ' + text);
+              playBeep(660, 0.05);
+          }).catch(() => showToast('COPY FAILED'));
+      });
+  });
+
+  // --- 9. Stamp click cycles messages ---
+  const stampEl = document.getElementById('stamp');
+  const stampMessages = ['Open to Offers', 'Caffeine Powered', 'Ctrl+Alt+Achieve', 'Go Blue \u{1F499}'];
+  let stampIdx = 0;
+  stampEl.addEventListener('click', () => {
+      stampIdx = (stampIdx + 1) % stampMessages.length;
+      stampEl.textContent = stampMessages[stampIdx];
+      stampEl.classList.remove('thud');
+      void stampEl.offsetWidth; // restart animation
+      stampEl.classList.add('thud');
+      playBeep(300, 0.09);
+  });
+
+  // --- 10. Konami code easter egg: PCB Night Mode ---
+  const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiPos = 0;
+  const eggBanner = document.getElementById('egg-banner');
+  window.addEventListener('keydown', (e) => {
+      const key = e.key;
+      if (key === konami[konamiPos]) {
+          konamiPos++;
+          if (konamiPos === konami.length) {
+              konamiPos = 0;
+              document.body.classList.toggle('night-mode');
+              eggBanner.classList.add('show');
+              playBeep(523, 0.1);
+              setTimeout(() => playBeep(659, 0.1), 120);
+              setTimeout(() => playBeep(784, 0.14), 240);
+              setTimeout(() => eggBanner.classList.remove('show'), 2400);
+          }
+      } else {
+          konamiPos = (key === konami[0]) ? 1 : 0;
+      }
+  });
 </script>
 
 </body>
