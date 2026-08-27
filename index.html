@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Will Kletzka — Computer Engineer</title>
+<meta name="description" content="Will Kletzka — Computer Engineering student. Firmware, FPGA, and full-stack systems.">
+
+<!-- Fonts: JetBrains Mono for the technical/display voice, Inter for body readability -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     TOKENS
+     Palette: PCB board green-black + phosphor signal green +
+     copper-trace amber. Reads like a populated circuit board
+     lit from within, not a generic dark-mode gradient site.
+     ============================================================ */
+  :root{
+    --board-bg: #0b1210;
+    --board-bg-2: #0e1815;
+    --copper: #c98a4b;
+    --copper-dim: #7a5a37;
+    --signal: #5fffb0;
+    --signal-dim: #2a6b53;
+    --silk: #e9ede9;
+    --silk-dim: #9fada6;
+    --danger-led: #ff6b5f;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --pad: clamp(20px, 5vw, 64px);
+    --radius: 3px;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  ::selection{ background: var(--signal); color: #06110d; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(95,255,176,0.06), transparent 45%),
+      radial-gradient(ellipse at 90% 10%, rgba(201,138,75,0.05), transparent 40%),
+      var(--board-bg);
+    color: var(--silk);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* faint PCB grid, like copper layer dots */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    pointer-events:none;
+    background-image:
+      radial-gradient(circle, rgba(233,237,233,0.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  a{ color: inherit; }
+
+  h1,h2,h3{
+    font-family: var(--mono);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--signal);
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before{
+    content:"";
+    width: 7px; height:7px;
+    background: var(--signal);
+    box-shadow: 0 0 8px var(--signal);
+    border-radius: 50%;
+    display:inline-block;
+    animation: blink 2.4s infinite ease-in-out;
+  }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  section{
+    position: relative;
+    z-index: 1;
+    padding: 88px var(--pad);
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  /* ============================================================
+     NAV
+     ============================================================ */
+  header.nav{
+    position: sticky;
+    top:0;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(11,18,16,0.75);
+    border-bottom: 1px solid rgba(233,237,233,0.08);
+  }
+  .nav-inner{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px var(--pad);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    font-family: var(--mono);
+  }
+  .nav-mark{
+    font-weight:800;
+    color: var(--silk);
+    font-size: 0.95rem;
+    display:flex; align-items:center; gap:8px;
+  }
+  .nav-mark .chip{
+    width:14px; height:14px;
+    border: 1.5px solid var(--copper);
+    border-radius: 2px;
+    position:relative;
+    flex-shrink:0;
+  }
+  .nav-mark .chip::before,.nav-mark .chip::after{
+    content:"";
+    position:absolute;
+    background: var(--copper);
+    width:4px; height:1.5px;
+  }
+  .nav-mark .chip::before{ left:-4px; top:5px; }
+  .nav-mark .chip::after{ right:-4px; top:5px; }
+
+  nav.links{
+    display:flex;
+    gap: 28px;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+  }
+  nav.links a{
+    text-decoration:none;
+    color: var(--silk-dim);
+    transition: color 0.2s ease;
+    position:relative;
+  }
+  nav.links a:hover, nav.links a:focus-visible{ color: var(--signal); }
+  nav.links a::before{ content:"// "; color: var(--copper-dim); }
+
+  /* ============================================================
+     SIGNATURE ELEMENT: the trace spine.
+     A vertical circuit trace runs down the left margin on wide
+     screens. A signal pulse travels it, and each section has a
+     "pad" that lights up (like a populated component) once it
+     scrolls into view — echoing continuity testing on a board.
+     ============================================================ */
+  .trace-spine{
+    position: fixed;
+    left: 28px;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 2;
+    pointer-events: none;
+    display: none;
+  }
+  @media (min-width: 1000px){ .trace-spine{ display:block; } }
+  .trace-spine svg{ height: 100%; width: 100%; }
+  .trace-line{
+    stroke: var(--copper-dim);
+    stroke-width: 2;
+    fill: none;
+  }
+  .trace-pulse{
+    stroke: var(--signal);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 40 2000;
+    filter: drop-shadow(0 0 6px var(--signal));
+    animation: travel 7s linear infinite;
+  }
+  @keyframes travel{
+    0%{ stroke-dashoffset: 2040; }
+    100%{ stroke-dashoffset: 0; }
+  }
+  .trace-pad{
+    fill: var(--board-bg);
+    stroke: var(--copper);
+    stroke-width: 2;
+    r: 5;
+    transition: fill 0.4s ease, stroke 0.4s ease, filter 0.4s ease;
+  }
+  .trace-pad.lit{
+    fill: var(--signal);
+    stroke: var(--signal);
+    filter: drop-shadow(0 0 6px var(--signal));
+  }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero{
+    min-height: 92vh;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 60px;
+  }
+  .hero-kicker{
+    font-family: var(--mono);
+    color: var(--copper);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  h1.title{
+    font-size: clamp(2.6rem, 7vw, 5.2rem);
+    line-height: 0.98;
+    color: var(--silk);
+  }
+  h1.title .accent{ color: var(--signal); }
+  .hero-role{
+    font-family: var(--sans);
+    font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+    color: var(--silk-dim);
+    max-width: 620px;
+    margin-top: 22px;
+    font-weight: 400;
+  }
+  .hero-role b{ color: var(--silk); font-weight: 600; }
+
+  .hero-cta{
+    display:flex;
+    gap:16px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+  .btn{
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 13px 22px;
+    border-radius: var(--radius);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary{
+    background: var(--signal);
+    color: #06110d;
+    font-weight: 700;
+  }
+  .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 8px 24px rgba(95,255,176,0.25); }
+  .btn-ghost{
+    border: 1px solid rgba(233,237,233,0.2);
+    color: var(--silk);
+  }
+  .btn-ghost:hover{ border-color: var(--copper); color: var(--copper); transform: translateY(-2px); }
+
+  /* scope readout */
+  .scope{
+    margin-top: 56px;
+    border: 1px solid rgba(233,237,233,0.1);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(233,237,233,0.02), transparent);
+    padding: 14px 18px;
+    max-width: 560px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--silk-dim);
+  }
+  .scope-head{ display:flex; justify-content: space-between; margin-bottom:8px; color: var(--copper); }
+  .scope svg{ width:100%; height: 44px; display:block; }
+  .scope-wave{ stroke: var(--signal); stroke-width: 1.6; fill:none; }
+
+  /* ============================================================
+     SECTION HEADS
+     ============================================================ */
+  .section-head{
+    display:flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 44px;
+    border-bottom: 1px solid rgba(233,237,233,0.08);
+    padding-bottom: 18px;
+  }
+  .section-head h2{ font-size: clamp(1.5rem, 3vw, 2rem); color: var(--silk); }
+  .section-head .tag{
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--copper);
+    border: 1px solid var(--copper-dim);
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ============================================================
+     ABOUT
+     ============================================================ */
+  .about-grid{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 48px;
+  }
+  @media (max-width: 780px){ .about-grid{ grid-template-columns: 1fr; } }
+  .about-text p{ color: var(--silk-dim); font-size: 1.02rem; }
+  .about-text p + p{ margin-top: 16px; }
+  .about-text b{ color: var(--silk); font-weight: 600; }
+
+  .stat-card{
+    border: 1px solid rgba(233,237,233,0.1);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    background: rgba(233,237,233,0.02);
+  }
+  .stat-card + .stat-card{ margin-top: 14px; }
+  .stat-num{ font-family: var(--mono); font-size: 1.6rem; color: var(--signal); font-weight: 700; }
+  .stat-label{ font-size: 0.8rem; color: var(--silk-dim); margin-top: 2px; }
+
+  /* ============================================================
+     EXPERIENCE — timeline styled like a PCB trace connecting
+     mounted components (only justified because it IS a real
+     chronological sequence).
+     ============================================================ */
+  .timeline{
+    position: relative;
+    padding-left: 30px;
+    border-left: 2px solid var(--copper-dim);
+  }
+  .role{
+    position: relative;
+    padding-bottom: 40px;
+  }
+  .role:last-child{ padding-bottom: 0; }
+  .role::before{
+    content:"";
+    position:absolute;
+    left: -37px;
+    top: 4px;
+    width: 12px; height:12px;
+    background: var(--board-bg);
+    border: 2px solid var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--board-bg);
+  }
+  .role-head{
+    display:flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .role-title{ font-family: var(--mono); font-size: 1.02rem; color: var(--silk); font-weight: 700; }
+  .role-org{ color: var(--copper); font-weight: 500; }
+  .role-time{ font-family: var(--mono); font-size: 0.75rem; color: var(--silk-dim); white-space: nowrap; }
+  .role ul{ margin: 10px 0 0; padding-left: 18px; color: var(--silk-dim); }
+  .role li + li{ margin-top: 6px; }
+  .role li::marker{ color: var(--signal); }
+
+  /* ============================================================
+     PROJECTS — component-card styling, pin-header edges
+     ============================================================ */
+  .project-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px;
+  }
+  .card{
+    position: relative;
+    border: 1px solid rgba(233,237,233,0.12);
+    border-radius: var(--radius);
+    padding: 26px 24px 24px;
+    background: linear-gradient(180deg, rgba(233,237,233,0.03), transparent 60%);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover{ border-color: var(--signal-dim); transform: translateY(-4px); }
+  /* pin-header dots along the top edge, like a header connector */
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-1px; left: 16px; right:16px; height:1px;
+    background-image: linear-gradient(90deg, var(--copper-dim) 50%, transparent 50%);
+    background-size: 8px 1px;
+  }
+  .card-title{ font-family: var(--mono); font-size: 1.05rem; color: var(--silk); font-weight:700; }
+  .card-stack{
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--signal);
+    letter-spacing: 0.03em;
+    margin-top: 6px;
+    opacity: 0.85;
+  }
+  .card p.desc{ color: var(--silk-dim); font-size: 0.92rem; margin-top: 14px; }
+  .card-links{ margin-top: 16px; display:flex; gap:14px; }
+  .card-links a{
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--copper);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .card-links a:hover{ border-color: var(--copper); }
+
+  /* ============================================================
+     SKILLS — legend / silkscreen labels
+     ============================================================ */
+  .skill-groups{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 30px; }
+  .skill-group h3{
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--copper);
+    margin-bottom: 14px;
+  }
+  .chip-row{ display:flex; flex-wrap: wrap; gap:8px; }
+  .chip{
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--silk);
+    border: 1px solid rgba(233,237,233,0.15);
+    padding: 6px 11px;
+    border-radius: 2px;
+    background: rgba(233,237,233,0.02);
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .chip:hover{ border-color: var(--signal); color: var(--signal); }
+
+  /* ============================================================
+     CONTACT — terminal
+     ============================================================ */
+  .terminal{
+    border: 1px solid rgba(233,237,233,0.14);
+    border-radius: 6px;
+    overflow: hidden;
+    max-width: 640px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .term-bar{
+    background: rgba(233,237,233,0.04);
+    padding: 10px 14px;
+    display:flex;
+    gap: 7px;
+    border-bottom: 1px solid rgba(233,237,233,0.08);
+  }
+  .term-bar span{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .term-bar span:nth-child(1){ background: var(--danger-led); }
+  .term-bar span:nth-child(2){ background: var(--copper); }
+  .term-bar span:nth-child(3){ background: var(--signal); }
+  .term-body{
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    padding: 22px 24px;
+    color: var(--silk-dim);
+    background: #060b09;
+  }
+  .term-body .line{ margin-bottom: 10px; }
+  .term-body .prompt{ color: var(--signal); }
+  .term-body a{ color: var(--copper); text-decoration:none; }
+  .term-body a:hover{ text-decoration: underline; }
+  .cursor{
+    display:inline-block;
+    width: 8px; height: 15px;
+    background: var(--signal);
+    vertical-align: middle;
+    animation: blink 1s steps(1) infinite;
+  }
+
+  footer{
+    text-align:center;
+    padding: 40px var(--pad) 60px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--silk-dim);
+    opacity: 0.6;
+  }
+
+  /* reveal-on-scroll */
+  .reveal{ opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in{ opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  }
+
+  :focus-visible{ outline: 2px solid var(--signal); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== TRACE SPINE (signature element) ===================== -->
+<div class="trace-spine" aria-hidden="true">
+  <svg viewBox="0 0 40 1000" preserveAspectRatio="none">
+    <path class="trace-line" d="M20,0 L20,120 L10,140 L10,300 L20,320 L20,500 L10,520 L10,700 L20,720 L20,1000"/>
+    <path class="trace-pulse" d="M20,0 L20,120 L10,140 L10,300 L20,320 L20,500 L10,520 L10,700 L20,720 L20,1000"/>
+    <circle class="trace-pad" data-target="about" cx="20" cy="120" r="5"/>
+    <circle class="trace-pad" data-target="experience" cx="10" cy="320" r="5"/>
+    <circle class="trace-pad" data-target="projects" cx="20" cy="520" r="5"/>
+    <circle class="trace-pad" data-target="skills" cx="10" cy="720" r="5"/>
+  </svg>
+</div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav">
+  <div class="nav-inner">
+    <div class="nav-mark"><span class="chip"></span> WILL.KLETZKA</div>
+    <nav class="links">
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="top">
+  <div class="hero-kicker">/* Computer Engineering — hardware ↔ software */</div>
+  <h1 class="title">Will Kletzka<span class="accent">.</span></h1>
+  <p class="hero-role">
+    I build things that live at the boundary of <b>silicon and software</b> —
+    <!-- EDIT: swap in your own one-line positioning -->
+    from FPGA datapaths to full-stack systems, with a habit of measuring
+    everything twice before soldering once.
+  </p>
+  <div class="hero-cta">
+    <a class="btn btn-primary" href="#projects">View Projects →</a>
+    <a class="btn btn-ghost" href="#contact">Get In Touch</a>
+  </div>
+
+  <!-- oscilloscope readout, purely atmospheric but grounded in the subject -->
+  <div class="scope" aria-hidden="true">
+    <div class="scope-head"><span>CH1 · SIGNAL</span><span>5V/DIV · 10ms</span></div>
+    <svg viewBox="0 0 500 60" preserveAspectRatio="none">
+      <path class="scope-wave" d="M0,30 L20,30 L30,10 L40,50 L50,30 L90,30 L100,10 L110,50 L120,30 L500,30"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ===================== ABOUT ===================== -->
+<section id="about" class="reveal">
+  <div class="section-head">
+    <h2>About</h2>
+    <span class="tag">01 · PROFILE</span>
+  </div>
+  <div class="about-grid">
+    <div class="about-text">
+      <!-- EDIT: replace with your real bio -->
+      <p>
+        I'm a <b>Computer Engineering</b> student at the <b>University of Michigan</b>,
+        minoring in Mathematics, with a 4.0 GPA and a habit of chasing problems
+        that sit between hardware and software — FPGAs, embedded systems,
+        computer vision, and the full-stack tools that tie them together.
+      </p>
+      <p>
+        Outside of coursework I mentor a computer vision subteam on Michigan's
+        autonomous vehicle team, compete in club wrestling, and spend
+        weekends prototyping small hardware builds just to see if they'll work.
+      </p>
+    </div>
+    <div class="about-stats">
+      <div class="stat-card">
+        <div class="stat-num">4.0</div>
+        <div class="stat-label">GPA · B.S.E Computer Engineering, University of Michigan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">2028</div>
+        <div class="stat-label">Expected graduation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">90%+</div>
+        <div class="stat-label">Detection accuracy, latest CV model — swap for your own headline metric</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EXPERIENCE ===================== -->
+<section id="experience" class="reveal">
+  <div class="section-head">
+    <h2>Experience</h2>
+    <span class="tag">02 · TIMELINE</span>
+  </div>
+  <div class="timeline">
+    <!-- EDIT: duplicate .role blocks for each position -->
+    <div class="role">
+      <div class="role-head">
+        <div><span class="role-title">Software Engineering Intern</span> — <span class="role-org">Company Name</span></div>
+        <div class="role-time">Month 20XX – Present</div>
+      </div>
+      <ul>
+        <li>Placeholder bullet describing scope and stack used on this role.</li>
+        <li>Placeholder bullet with a quantified result — reduced X by Y%.</li>
+        <li>Placeholder bullet describing a system or tool you shipped.</li>
+      </ul>
+    </div>
+    <div class="role">
+      <div class="role-head">
+        <div><span class="role-title">Data / Hardware Intern</span> — <span class="role-org">Company Name</span></div>
+        <div class="role-time">Month 20XX – Month 20XX</div>
+      </div>
+      <ul>
+        <li>Placeholder bullet describing scope and stack used on this role.</li>
+        <li>Placeholder bullet with a quantified result.</li>
+      </ul>
+    </div>
+    <div class="role">
+      <div class="role-head">
+        <div><span class="role-title">Leadership Role</span> — <span class="role-org">Student Org</span></div>
+        <div class="role-time">Month 20XX – Present</div>
+      </div>
+      <ul>
+        <li>Placeholder bullet describing what you lead or mentor.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROJECTS ===================== -->
+<section id="projects" class="reveal">
+  <div class="section-head">
+    <h2>Projects</h2>
+    <span class="tag">03 · BUILDS</span>
+  </div>
+  <div class="project-grid">
+    <!-- EDIT: duplicate .card blocks for each project -->
+    <div class="card">
+      <div class="card-title">Project Name</div>
+      <div class="card-stack">PYTHON · REACT · POSTGRES</div>
+      <p class="desc">One or two sentences on what the project does and the
+        interesting technical problem it solved. Placeholder copy — replace
+        with your own.</p>
+      <div class="card-links">
+        <a href="#">Repo →</a>
+        <a href="#">Demo →</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Project Name</div>
+      <div class="card-stack">C++ · ARDUINO · SERIAL</div>
+      <p class="desc">Placeholder description of an embedded or hardware
+        project — sensors, microcontrollers, real-time constraints.</p>
+      <div class="card-links">
+        <a href="#">Repo →</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Project Name</div>
+      <div class="card-stack">VERILOG · FPGA</div>
+      <p class="desc">Placeholder description of a digital design project —
+        datapath, control logic, timing constraints.</p>
+      <div class="card-links">
+        <a href="#">Repo →</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Project Name</div>
+      <div class="card-stack">FASTAPI · DOCKER · CI/CD</div>
+      <p class="desc">Placeholder description of a cloud-native or backend
+        service project, containerized and deployed via CI/CD.</p>
+      <div class="card-links">
+        <a href="#">Repo →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SKILLS ===================== -->
+<section id="skills" class="reveal">
+  <div class="section-head">
+    <h2>Skills</h2>
+    <span class="tag">04 · SILKSCREEN</span>
+  </div>
+  <div class="skill-groups">
+    <div class="skill-group">
+      <h3>Languages</h3>
+      <div class="chip-row">
+        <span class="chip">C++</span>
+        <span class="chip">Python</span>
+        <span class="chip">Verilog HDL</span>
+        <span class="chip">TypeScript</span>
+        <span class="chip">MATLAB</span>
+      </div>
+    </div>
+    <div class="skill-group">
+      <h3>Tools &amp; Frameworks</h3>
+      <div class="chip-row">
+        <span class="chip">Git</span>
+        <span class="chip">Docker</span>
+        <span class="chip">React</span>
+        <span class="chip">FastAPI</span>
+        <span class="chip">OpenCV</span>
+        <span class="chip">Kubernetes</span>
+      </div>
+    </div>
+    <div class="skill-group">
+      <h3>Interests</h3>
+      <div class="chip-row">
+        <span class="chip">Embedded Systems</span>
+        <span class="chip">Computer Vision</span>
+        <span class="chip">FPGA Design</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section id="contact" class="reveal">
+  <div class="section-head">
+    <h2>Contact</h2>
+    <span class="tag">05 · I/O</span>
+  </div>
+  <div class="terminal">
+    <div class="term-bar"><span></span><span></span><span></span></div>
+    <div class="term-body">
+      <div class="line">$ whoami</div>
+      <div class="line">Will Kletzka — Computer Engineering, University of Michigan</div>
+      <div class="line">$ cat contact.txt</div>
+      <div class="line">email  &nbsp;&nbsp;<a href="mailto:wkletzka@umich.edu">wkletzka@umich.edu</a></div>
+      <div class="line">github &nbsp;&nbsp;<a href="https://github.com/wkletzka" target="_blank" rel="noopener">github.com/wkletzka</a></div>
+      <div class="line">linkedin <a href="https://linkedin.com/in/william-kletzka" target="_blank" rel="noopener">linkedin.com/in/william-kletzka</a></div>
+      <div class="line prompt">$ <span class="cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Built &amp; soldered by Will Kletzka · Ann Arbor, MI
+</footer>
+
+<script>
+  // reveal-on-scroll
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el=>io.observe(el));
+
+  // light up trace pads as their section enters view
+  const pads = document.querySelectorAll('.trace-pad');
+  const sectionIO = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const pad = document.querySelector(`.trace-pad[data-target="${entry.target.id}"]`);
+      if(!pad) return;
+      if(entry.isIntersecting){ pad.classList.add('lit'); }
+      else { pad.classList.remove('lit'); }
+    });
+  }, { threshold: 0.35 });
+  ['about','experience','projects','skills'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) sectionIO.observe(el);
+  });
+</script>
+
+</body>
+</html>
